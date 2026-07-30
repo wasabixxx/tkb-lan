@@ -316,16 +316,16 @@ function initData(data) {
   });
 
   // Calculate overall semester date range
-  let minDate = new Date("2026-08-03"); // default starting monday
-  let maxDate = new Date("2026-10-04"); // default ending sunday
+  let minDate = new Date("2026-08-03T00:00:00");
+  let maxDate = new Date("2026-10-04T23:59:59");
 
   data.hoc_phan.forEach(hp => {
     if (hp.thoi_gian.tu_ngay) {
-      const d1 = new Date(hp.thoi_gian.tu_ngay);
+      const d1 = new Date(hp.thoi_gian.tu_ngay + "T00:00:00");
       if (d1 < minDate) minDate = d1;
     }
     if (hp.thoi_gian.den_ngay) {
-      const d2 = new Date(hp.thoi_gian.den_ngay);
+      const d2 = new Date(hp.thoi_gian.den_ngay + "T23:59:59");
       if (d2 > maxDate) maxDate = d2;
     }
   });
@@ -342,8 +342,11 @@ function initData(data) {
 
   while (curr <= maxDate) {
     const startOfWeek = new Date(curr);
+    startOfWeek.setHours(0,0,0,0);
+
     const endOfWeek = new Date(curr);
-    endOfWeek.setDate(endOfWeek.getDate() + 6); // Sunday
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    endOfWeek.setHours(23,59,59,999);
 
     weeksList.push({
       index: weekNum - 1,
@@ -415,16 +418,27 @@ function renderView() {
   }
 }
 
-// 1. Weekly Grid View (Supports Zoom Fit, Mobile Single Day View & Elearning Bar)
+// Helper: Format YYYY-MM-DD Date String for exact comparisons
+function toDateStr(dObj) {
+  const y = dObj.getFullYear();
+  const m = (dObj.getMonth() + 1).toString().padStart(2, '0');
+  const d = dObj.getDate().toString().padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// 1. Weekly Grid View (Supports Zoom Fit, Mobile Single Day View, In-Grid LMS Row & Notice Banner)
 function renderWeeklyGrid(container) {
   const activeWeek = weeksList[selectedWeekIndex];
   if (!activeWeek) return;
 
-  // Filter modules active during this week date range
+  const startWeekStr = toDateStr(activeWeek.startDate);
+  const endWeekStr = toDateStr(activeWeek.endDate);
+
+  // Filter modules active during this week date range (Date string comparison avoids timezone bugs)
   const activeModules = currentTkbData.hoc_phan.filter(hp => {
-    const tu = new Date(hp.thoi_gian.tu_ngay);
-    const den = new Date(hp.thoi_gian.den_ngay);
-    return tu <= activeWeek.endDate && den >= activeWeek.startDate;
+    const tuStr = hp.thoi_gian.tu_ngay;
+    const denStr = hp.thoi_gian.den_ngay;
+    return tuStr <= endWeekStr && denStr >= startWeekStr;
   });
 
   // Apply search query if present
@@ -440,6 +454,9 @@ function renderWeeklyGrid(container) {
   // Separate fixed period modules vs E-Learning LMS modules
   const inPersonModules = filteredModules.filter(hp => hp.hinh_thuc !== "ELEARNING");
   const elearningModules = filteredModules.filter(hp => hp.hinh_thuc === "ELEARNING");
+
+  // Check if there are E-Learning modules in the whole semester that start later
+  const allElearningSemester = currentTkbData.hoc_phan.filter(hp => hp.hinh_thuc === "ELEARNING");
 
   // Determine active days list (all 6 days or single day filtered on mobile)
   const currentDayKey = selectedMobileDay || "all";
@@ -465,14 +482,27 @@ function renderWeeklyGrid(container) {
     });
   });
 
-  // Build HTML Table Grid Structure
+  let html = "";
+
+  // 1. Render Top Notice Banner if LMS courses exist in semester but not active in current week (e.g. Tuần 1)
+  if (elearningModules.length === 0 && allElearningSemester.length > 0) {
+    const nextEl = allElearningSemester[0];
+    html += `
+      <div class="lms-notice-banner">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>💡 <strong>Thông báo Môn LMS Online</strong>: Môn <strong>${nextEl.ten_hoc_phan} (E-Learning - Nhóm ${nextEl.nhom})</strong> bắt đầu học từ <strong>Tuần 2</strong> (${formatDateFull(nextEl.thoi_gian.tu_ngay)} ➔ ${formatDateFull(nextEl.thoi_gian.den_ngay)}). Bấm chọn <strong>Tuần 2</strong> để xem lịch LMS!</span>
+      </div>
+    `;
+  }
+
+  // 2. Build Timetable Grid Structure
   const gridClasses = [
     'timetable-grid',
     isSingleDay ? 'single-day-grid' : '',
     isZoomFitMode ? 'zoom-fit-week' : ''
   ].filter(Boolean).join(' ');
 
-  let html = `<div class="${gridClasses}">`;
+  html += `<div class="${gridClasses}">`;
 
   // Grid Header: Empty top-left cell + Days of week with dates
   html += `<div class="grid-header-cell time-column-header">Tiết / Thứ</div>`;
@@ -491,7 +521,43 @@ function renderWeeklyGrid(container) {
     `;
   });
 
-  // Periods Row Loop (1 to 10)
+  // 3. Render Dedicated In-Grid LMS Online Row if active this week! (Matching original schedule table)
+  if (elearningModules.length > 0) {
+    html += `
+      <div class="period-cell elearning-period-cell">
+        <div class="period-num">💻 LMS</div>
+        <div class="period-time">Tự học LMS</div>
+      </div>
+    `;
+
+    finalDisplayDays.forEach(day => {
+      html += `<div class="slot-cell slot-occupied" style="grid-row: auto">`;
+      elearningModules.forEach(hp => {
+        const colorInfo = subjectColorMap[hp.ten_hoc_phan] || { className: "sub-6" };
+        const teacherNames = hp.giang_vien.map(g => g.ho_ten).join(", ");
+
+        html += `
+          <div class="course-card ${colorInfo.className}" onclick="openModal('${escapeHtml(JSON.stringify(hp))}')" style="border: 2px dashed var(--subject-6); box-shadow: 0 0 10px rgba(249,115,22,0.2)">
+            <div class="course-card-header">
+              <div class="course-title" style="color:var(--text-main)">${hp.ten_hoc_phan}</div>
+              <div class="badge-group" style="background:#f97316; color:#fff">LMS</div>
+            </div>
+            <div class="course-card-details">
+              <div class="course-detail-row">
+                <span>📍 Phòng: <strong>LMS ONLINE</strong></span>
+              </div>
+              <div class="course-detail-row">
+                <span>GV: ${teacherNames}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    });
+  }
+
+  // 4. Periods Row Loop (1 to 10)
   for (let p = 1; p <= 10; p++) {
     // Add Session Divider for Morning/Afternoon
     if (p === 1) {
@@ -550,13 +616,13 @@ function renderWeeklyGrid(container) {
 
   html += `</div>`;
 
-  // Render E-Learning LMS Online courses section if active this week
+  // 5. Render Bottom E-Learning LMS Section
   if (elearningModules.length > 0) {
     html += `
       <div class="elearning-section">
         <div class="elearning-header">
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-          💻 HỌC TRỰC TUYẾN TRÊN LMS (E-LEARNING TỰ HỌC TRONG TUẦN)
+          💻 KHÓA HỌC TRỰC TUYẾN TRÊN LMS (TỰ HỌC E-LEARNING)
         </div>
         <div class="elearning-grid">
     `;
@@ -603,7 +669,7 @@ function renderCatalogView(container) {
         <div class="catalog-main">
           <div class="catalog-accent-bar sub-${colorInfo.index}"></div>
           <div class="catalog-title">
-            <h3>${subName}</h3>
+            <h3>${subName} ${firstHp.hinh_thuc === 'ELEARNING' ? '📱 [LMS ONLINE]' : ''}</h3>
             <p>Hình thức: ${firstHp.hinh_thuc} | Tín chỉ: ${firstHp.so_tin_chi} STC | Lý thuyết: ${firstHp.so_tiet_ly_thuyet} tiết</p>
           </div>
         </div>
@@ -690,7 +756,13 @@ function selectWeek(index) {
 
 function selectTodayWeek() {
   const now = new Date();
-  const foundIdx = weeksList.findIndex(w => now >= w.startDate && now <= w.endDate);
+  const nowStr = toDateStr(now);
+  const foundIdx = weeksList.findIndex(w => {
+    const startStr = toDateStr(w.startDate);
+    const endStr = toDateStr(w.endDate);
+    return nowStr >= startStr && nowStr <= endStr;
+  });
+
   if (foundIdx !== -1) {
     selectedWeekIndex = foundIdx;
   } else {
