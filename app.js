@@ -211,6 +211,7 @@ let selectedWeekIndex = 0;
 let currentViewMode = "weekly"; // "weekly" | "catalog" | "master"
 let searchQuery = "";
 let subjectColorMap = {};
+let selectedMobileDay = "all"; // "all" | "2" | "3" | "4" | "5" | "6" | "7"
 
 // Color CSS class names mapping
 const SUBJECT_CLASSES = ["sub-1", "sub-2", "sub-3", "sub-4", "sub-5"];
@@ -360,7 +361,7 @@ function renderView() {
   }
 }
 
-// 1. Weekly Grid View
+// 1. Weekly Grid View (Supports full grid & single-day mobile view)
 function renderWeeklyGrid(container) {
   const activeWeek = weeksList[selectedWeekIndex];
   if (!activeWeek) return;
@@ -369,7 +370,6 @@ function renderWeeklyGrid(container) {
   const activeModules = currentTkbData.hoc_phan.filter(hp => {
     const tu = new Date(hp.thoi_gian.tu_ngay);
     const den = new Date(hp.thoi_gian.den_ngay);
-    // Check overlap of date ranges
     return tu <= activeWeek.endDate && den >= activeWeek.startDate;
   });
 
@@ -383,8 +383,14 @@ function renderWeeklyGrid(container) {
     return matchName || matchTeacher || matchRoom;
   });
 
-  // Create Matrix for 6 Days (Thu 2 -> Thu 7) x 10 Periods
-  // Each cell key: `thu_period`
+  // Determine active days list (all 6 days or single day filtered on mobile)
+  const displayDays = selectedMobileDay === "all" 
+    ? DAYS_OF_WEEK 
+    : DAYS_OF_WEEK.filter(d => d.key.toString() === selectedMobileDay);
+
+  const isSingleDay = displayDays.length === 1;
+
+  // Create Matrix for Days x 10 Periods
   const matrix = {};
   filteredModules.forEach(hp => {
     hp.lich_hoc.forEach(lh => {
@@ -400,14 +406,15 @@ function renderWeeklyGrid(container) {
   });
 
   // Build HTML Table Grid Structure
-  let html = `<div class="timetable-grid">`;
+  let html = `<div class="timetable-grid ${isSingleDay ? 'single-day-grid' : ''}">`;
 
   // Grid Header: Empty top-left cell + Days of week with dates
   html += `<div class="grid-header-cell time-column-header">Tiết / Thứ</div>`;
   
-  DAYS_OF_WEEK.forEach((day, dIdx) => {
+  displayDays.forEach((day) => {
+    const dayOffset = day.key - 2; // Thu 2 -> offset 0
     const dayDate = new Date(activeWeek.startDate);
-    dayDate.setDate(dayDate.getDate() + dIdx);
+    dayDate.setDate(dayDate.getDate() + dayOffset);
     const isToday = isSameDay(dayDate, new Date());
 
     html += `
@@ -436,8 +443,8 @@ function renderWeeklyGrid(container) {
       </div>
     `;
 
-    // 6 Day Columns
-    DAYS_OF_WEEK.forEach(day => {
+    // Day Columns
+    displayDays.forEach(day => {
       const key = `${day.key}_${p}`;
       const items = matrix[key] || [];
 
@@ -461,7 +468,7 @@ function renderWeeklyGrid(container) {
                   <span>Phòng: <strong>${lh.phong}</strong></span>
                 </div>
                 <div class="course-detail-row">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                   <span>${teacherNames}</span>
                 </div>
               </div>
@@ -522,7 +529,7 @@ function renderCatalogView(container) {
 function renderMasterView(container) {
   let html = `<div class="catalog-view-container">`;
 
-  currentTkbData.hoc_phan.forEach((hp, idx) => {
+  currentTkbData.hoc_phan.forEach((hp) => {
     const colorInfo = subjectColorMap[hp.ten_hoc_phan] || { index: 1 };
     const teacherNames = hp.giang_vien.map(g => `${g.chuc_danh || ''} ${g.ho_ten} (${g.ma})`).join("; ");
 
@@ -611,6 +618,18 @@ function filterBySubject(subName) {
   showToast(`Đã lọc theo môn: ${subName}`);
 }
 
+function handleMobileDayFilter(dayKey) {
+  selectedMobileDay = dayKey;
+  document.querySelectorAll(".mobile-day-pill").forEach(pill => {
+    pill.classList.toggle("active", pill.dataset.day === dayKey);
+  });
+  if (currentViewMode !== "weekly") {
+    switchViewMode("weekly");
+  } else {
+    renderView();
+  }
+}
+
 function handleSearch(val) {
   searchQuery = val.trim();
   renderView();
@@ -653,7 +672,7 @@ function openModal(hpJsonStr, dayKey = null, room = null) {
         <div class="modal-info-val">${hp.so_tin_chi} Tín chỉ</div>
       </div>
       <div class="modal-info-block">
-        <div class="modal-info-lbl">Số tiết (Lý thuyết / Thảo luận)</div>
+        <div class="modal-info-lbl">Số tiết (Lý thuyết)</div>
         <div class="modal-info-val">${hp.so_tiet_ly_thuyet} tiết</div>
       </div>
       <div class="modal-info-block" style="grid-column: span 2;">
@@ -703,9 +722,7 @@ function handleFileUpload(event) {
 
 // Export PNG Image Helper
 function exportPNG() {
-  const node = document.getElementById("timetableContainer");
-  showToast("Đang tạo ảnh Thời khóa biểu...");
-
+  showToast("Đang mở hộp thoại In / Lưu PDF...");
   window.print();
 }
 
@@ -719,7 +736,7 @@ function showToast(msg) {
 
   setTimeout(() => {
     toast.style.opacity = "0";
-    toast.style.transform = "translateY(20px)";
+    toast.style.transform = "translateY(15px)";
     setTimeout(() => toast.remove(), 300);
   }, 3000);
 }
@@ -737,6 +754,10 @@ function setupEventListeners() {
 
   document.querySelectorAll(".view-tab").forEach(tab => {
     tab.addEventListener("click", () => switchViewMode(tab.dataset.mode));
+  });
+
+  document.querySelectorAll(".mobile-day-pill").forEach(pill => {
+    pill.addEventListener("click", () => handleMobileDayFilter(pill.dataset.day));
   });
 
   // Close modal when clicking outside
