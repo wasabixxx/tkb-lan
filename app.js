@@ -645,6 +645,18 @@ function toggleZoomFit() {
   showToast(isZoomFitMode ? "🔍 Đã bật Thu Nhỏ (Hiển thị trọn cả tuần trên màn hình)" : "🔍 Trở lại kích thước chuẩn");
 }
 
+function hardReloadApp() {
+  showToast("Đang làm mới ứng dụng...");
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      names.forEach(name => caches.delete(name));
+    });
+  }
+  // Force reload with unique query timestamp
+  const baseUrl = window.location.href.split('?')[0];
+  window.location.href = baseUrl + '?t=' + Date.now();
+}
+
 function filterBySubject(subName) {
   searchQuery = subName;
   document.getElementById("searchInput").value = subName;
@@ -787,6 +799,9 @@ function setupEventListeners() {
   document.getElementById("jsonFileInput").addEventListener("change", handleFileUpload);
   document.getElementById("exportBtn").addEventListener("click", exportPNG);
   
+  const reloadAppBtn = document.getElementById("reloadAppBtn");
+  if (reloadAppBtn) reloadAppBtn.addEventListener("click", hardReloadApp);
+
   const zoomToggleBtn = document.getElementById("zoomToggleBtn");
   if (zoomToggleBtn) zoomToggleBtn.addEventListener("click", toggleZoomFit);
 
