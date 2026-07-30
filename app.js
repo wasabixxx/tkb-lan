@@ -951,6 +951,54 @@ function exportPNG() {
   window.print();
 }
 
+// Export iCalendar (.ics) for Google Calendar / iPhone Sync
+function exportICalendar() {
+  let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//TKB DH13KE2//VN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\nX-WR-CALNAME:Thời Khóa Biểu DH13KE2\n";
+
+  currentTkbData.hoc_phan.forEach((hp) => {
+    if (hp.hinh_thuc === "ELEARNING") return;
+    hp.lich_hoc.forEach(lh => {
+      const tietStart = lh.tiet[0];
+      const tietEnd = lh.tiet[lh.tiet.length - 1];
+      const startTimeStr = PERIOD_TIMES[tietStart]?.start || "07:00";
+
+      const tuDate = new Date(hp.thoi_gian.tu_ngay + "T" + startTimeStr + ":00");
+      const denDate = new Date(hp.thoi_gian.den_ngay + "T23:59:59");
+
+      // Find first occurrence of target day (thu: 2..7)
+      let curr = new Date(tuDate);
+      const targetDay = lh.thu === 7 ? 6 : (lh.thu - 1);
+      while (curr.getDay() !== targetDay && curr <= denDate) {
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      if (curr <= denDate) {
+        const startIso = curr.toISOString().replace(/-|:|\.\d+/g, "").slice(0, 15) + "Z";
+        const endIso = new Date(curr.getTime() + (lh.tiet.length * 45 * 60000)).toISOString().replace(/-|:|\.\d+/g, "").slice(0, 15) + "Z";
+        const untilIso = denDate.toISOString().replace(/-|:|\.\d+/g, "").slice(0, 15) + "Z";
+
+        ics += "BEGIN:VEVENT\n";
+        ics += `SUMMARY:${hp.ten_hoc_phan} (Nhóm ${hp.nhom})\n`;
+        ics += `LOCATION:Phòng ${lh.phong}\n`;
+        ics += `DESCRIPTION:Giảng viên: ${hp.giang_vien.map(g => g.ho_ten).join(", ")}\n`;
+        ics += `DTSTART:${startIso}\n`;
+        ics += `DTEND:${endIso}\n`;
+        ics += `RRULE:FREQ=WEEKLY;UNTIL=${untilIso}\n`;
+        ics += "END:VEVENT\n";
+      }
+    });
+  });
+
+  ics += "END:VCALENDAR";
+
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "TKB_DH13KE2.ics";
+  link.click();
+  showToast("📅 Đã tải file Lịch (.ics). Mở file để đồng bộ tự động vào iPhone/Google Calendar!");
+}
+
 // Toast Notifications
 function showToast(msg) {
   const container = document.getElementById("toastContainer");
@@ -977,8 +1025,18 @@ function setupEventListeners() {
   document.getElementById("jsonFileInput").addEventListener("change", handleFileUpload);
   document.getElementById("exportBtn").addEventListener("click", exportPNG);
   
+  const exportIcalBtn = document.getElementById("exportIcalBtn");
+  if (exportIcalBtn) exportIcalBtn.addEventListener("click", exportICalendar);
+
   const reloadAppBtn = document.getElementById("reloadAppBtn");
   if (reloadAppBtn) reloadAppBtn.addEventListener("click", hardReloadApp);
+
+  // Keyboard Navigation (Left / Right Arrow)
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+    if (e.key === "ArrowLeft") prevWeek();
+    if (e.key === "ArrowRight") nextWeek();
+  });
 
   // Zoom Fit Buttons (Click + Touchend for fast responsive touch)
   const zoomMobileBtn = document.getElementById("zoomToggleBtn");

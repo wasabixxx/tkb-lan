@@ -9,6 +9,13 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
+  <!-- PWA & Mobile App Settings -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TKB ĐH13KE2">
+
   <title>Thời Khóa Biểu Trực Quan - Lớp DH13KE2</title>
   <meta name="description" content="Ứng dụng tra cứu Thời khóa biểu học tập trực quan, hỗ trợ môn tập trung và Elearning LMS cho lớp DH13KE2 năm học 2026.">
   
@@ -18,12 +25,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Stylesheet with Dynamic Version Cache-Buster -->
-  <link rel="stylesheet" href="style.css?v=20260730_v6">
+  <link rel="stylesheet" href="style.css?v=20260730_v7">
   
   <style>
     @media print {
       body { background: #ffffff !important; color: #000000 !important; }
-      .bg-glow-container, .toolbar-card, .mobile-day-bar, .legend-card, .btn-icon, .search-box, .view-tabs, #themeToggleBtn, #exportBtn, #uploadBtnLabel, #zoomToolbarBtn, #reloadAppBtn { display: none !important; }
+      .bg-glow-container, .toolbar-card, .mobile-day-bar, .legend-card, .btn-icon, .search-box, .view-tabs, #themeToggleBtn, #exportBtn, #uploadBtnLabel, #zoomToolbarBtn, #reloadAppBtn, #exportIcalBtn { display: none !important; }
       .timetable-container { box-shadow: none !important; border: 1px solid #ccc !important; }
       .course-card { page-break-inside: avoid; border: 1px solid #999 !important; background: #f0f0f0 !important; color: #000 !important; }
     }
@@ -97,7 +104,7 @@
       
       <!-- Week Controls -->
       <div class="week-navigation">
-        <button class="btn-icon" id="prevWeekBtn" title="Tuần trước">
+        <button class="btn-icon" id="prevWeekBtn" title="Tuần trước (Hoặc bấm phím Mũi tên Trái ◄)">
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
         </button>
 
@@ -105,7 +112,7 @@
           <select id="weekSelect" class="week-select" aria-label="Chọn tuần học"></select>
         </div>
 
-        <button class="btn-icon" id="nextWeekBtn" title="Tuần sau">
+        <button class="btn-icon" id="nextWeekBtn" title="Tuần sau (Hoặc bấm phím Mũi tên Phải ►)">
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
         </button>
 
@@ -134,10 +141,15 @@
             Môn học
           </button>
           <button class="view-tab" data-mode="master">
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
             Tất cả
           </button>
         </div>
+
+        <!-- Export iCal Calendar Button -->
+        <button class="btn-icon" id="exportIcalBtn" title="Đồng bộ Lịch vào iPhone/Google Calendar (.ics)">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        </button>
 
         <!-- Force Hard Reload App Button (Removes Cache) -->
         <button class="btn-icon" id="reloadAppBtn" title="Xóa cache và làm mới bản mới nhất">
@@ -207,7 +219,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- JavaScript with Dynamic Cache-Buster Version -->
-  <script src="app.js?v=20260730_v6"></script>
+  <script src="app.js?v=20260730_v7"></script>
 
 </body>
 </html>

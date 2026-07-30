@@ -1,0 +1,21 @@
+{
+  "name": "Thời Khóa Biểu ĐH13KE2",
+  "short_name": "TKB ĐH13KE2",
+  "description": "Ứng dụng tra cứu Thời khóa biểu học tập trực quan lớp ĐH13KE2 năm 2026",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/000000/calendar--v1.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/000000/calendar--v1.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
