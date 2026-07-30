@@ -385,11 +385,15 @@ function renderWeeklyGrid(container) {
   });
 
   // Determine active days list (all 6 days or single day filtered on mobile)
-  const displayDays = selectedMobileDay === "all" 
+  // Ensure selectedMobileDay fallback to "all" if undefined
+  const currentDayKey = selectedMobileDay || "all";
+  const displayDays = currentDayKey === "all" 
     ? DAYS_OF_WEEK 
-    : DAYS_OF_WEEK.filter(d => d.key.toString() === selectedMobileDay);
+    : DAYS_OF_WEEK.filter(d => d.key.toString() === currentDayKey);
 
-  const isSingleDay = displayDays.length === 1;
+  // If displayDays unexpectedly empty, default to all days
+  const finalDisplayDays = displayDays.length > 0 ? displayDays : DAYS_OF_WEEK;
+  const isSingleDay = finalDisplayDays.length === 1;
 
   // Create Matrix for Days x 10 Periods
   const matrix = {};
@@ -418,7 +422,7 @@ function renderWeeklyGrid(container) {
   // Grid Header: Empty top-left cell + Days of week with dates
   html += `<div class="grid-header-cell time-column-header">Tiết / Thứ</div>`;
   
-  displayDays.forEach((day) => {
+  finalDisplayDays.forEach((day) => {
     const dayOffset = day.key - 2; // Thu 2 -> offset 0
     const dayDate = new Date(activeWeek.startDate);
     dayDate.setDate(dayDate.getDate() + dayOffset);
@@ -451,7 +455,7 @@ function renderWeeklyGrid(container) {
     `;
 
     // Day Columns
-    displayDays.forEach(day => {
+    finalDisplayDays.forEach(day => {
       const key = `${day.key}_${p}`;
       const items = matrix[key] || [];
 
@@ -617,9 +621,17 @@ function switchViewMode(mode) {
   renderView();
 }
 
-function toggleZoomFit() {
+// Robust Zoom Toggle with Event Safety
+function toggleZoomFit(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
   isZoomFitMode = !isZoomFitMode;
-  
+  selectedMobileDay = "all"; // Ensure full week is displayed
+
+  // Update UI State on Buttons
   const zoomMobileBtn = document.getElementById("zoomToggleBtn");
   const zoomToolbarBtn = document.getElementById("zoomToolbarBtn");
 
@@ -633,13 +645,10 @@ function toggleZoomFit() {
     zoomToolbarBtn.style.borderColor = isZoomFitMode ? "#a855f7" : "";
   }
 
-  // Ensure day filter is reset to all if fitting full week
-  if (isZoomFitMode && selectedMobileDay !== "all") {
-    selectedMobileDay = "all";
-    document.querySelectorAll(".mobile-day-pill[data-day]").forEach(p => {
-      p.classList.toggle("active", p.dataset.day === "all");
-    });
-  }
+  // Sync mobile day pills
+  document.querySelectorAll(".mobile-day-pill[data-day]").forEach(p => {
+    p.classList.toggle("active", p.dataset.day === "all");
+  });
 
   renderView();
   showToast(isZoomFitMode ? "🔍 Đã bật Thu Nhỏ (Hiển thị trọn cả tuần trên màn hình)" : "🔍 Trở lại kích thước chuẩn");
@@ -666,6 +675,7 @@ function filterBySubject(subName) {
 }
 
 function handleMobileDayFilter(dayKey) {
+  if (!dayKey) return; // Prevent undefined key bug on zoom button!
   selectedMobileDay = dayKey;
   document.querySelectorAll(".mobile-day-pill[data-day]").forEach(pill => {
     pill.classList.toggle("active", pill.dataset.day === dayKey);
@@ -802,18 +812,28 @@ function setupEventListeners() {
   const reloadAppBtn = document.getElementById("reloadAppBtn");
   if (reloadAppBtn) reloadAppBtn.addEventListener("click", hardReloadApp);
 
-  const zoomToggleBtn = document.getElementById("zoomToggleBtn");
-  if (zoomToggleBtn) zoomToggleBtn.addEventListener("click", toggleZoomFit);
+  // Zoom Fit Buttons (Click + Touchend for fast responsive touch)
+  const zoomMobileBtn = document.getElementById("zoomToggleBtn");
+  if (zoomMobileBtn) {
+    zoomMobileBtn.addEventListener("click", toggleZoomFit);
+  }
 
   const zoomToolbarBtn = document.getElementById("zoomToolbarBtn");
-  if (zoomToolbarBtn) zoomToolbarBtn.addEventListener("click", toggleZoomFit);
+  if (zoomToolbarBtn) {
+    zoomToolbarBtn.addEventListener("click", toggleZoomFit);
+  }
 
   document.querySelectorAll(".view-tab").forEach(tab => {
     tab.addEventListener("click", () => switchViewMode(tab.dataset.mode));
   });
 
+  // Mobile Day Filter Pills - exclude buttons without data-day
   document.querySelectorAll(".mobile-day-pill[data-day]").forEach(pill => {
-    pill.addEventListener("click", () => handleMobileDayFilter(pill.dataset.day));
+    pill.addEventListener("click", (e) => {
+      if (pill.dataset.day) {
+        handleMobileDayFilter(pill.dataset.day);
+      }
+    });
   });
 
   // Close modal when clicking outside
