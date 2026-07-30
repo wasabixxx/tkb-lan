@@ -1,0 +1,59 @@
+import csv
+
+data = [
+    ["STT", "Môn học", "Lớp", "Số tín chỉ", "Hình thức", "Số tiết LT", "Số tiết TH", "Nhóm", "Thời gian", "Giảng viên", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"],
+    [1, "Hệ thống thông tin kế toán", "ĐH13KE2", 3, "LT", 45, 0, 1, "03/08 - 09/08/26", "LÊ THỊ HẠNH (15.179.GV)", "4,5 (A.202)", "6,7,8 (A.202)", "", "", "", ""],
+    [2, "Hệ thống thông tin kế toán", "ĐH13KE2", 3, "LT", 45, 0, 1, "03/08 - 09/08/26", "NGUYỄN CÔNG THỊ ĐOAN TRANG (15.216.TG)", "", "1,2,3 (A.202)", "9,10 (A.202)", "", "", ""],
+    [3, "Hệ thống thông tin kế toán", "ĐH13KE2", 3, "LT", 45, 0, 3, "10/08 - 30/08/26", "LÊ THỊ HẠNH (15.179.GV)", "", "6,7,8 (A.202)", "9,10 (A.202)", "", "", ""],
+    [4, "Hệ thống thông tin kế toán", "ĐH13KE2", 3, "LT", 45, 0, 4, "07/09 - 04/10/26", "LÊ THỊ HẠNH (15.179.GV)", "", "6,7,8 (A.202)", "9,10 (A.202)", "", "", ""],
+    [5, "Kế toán chi phí", "ĐH13KE2", 3, "LT", 45, 0, 9, "03/08 - 04/10/26", "LÊ THỊ THU HUYỀN (15.122.GV); NGUYỄN HOÀN (15.020.GVC)", "", "", "", "6,7,8 (A.202)", "9,10 (A.202)", ""],
+    [6, "Kế toán doanh nghiệp thương mại dịch vụ", "ĐH13KE2", 3, "LT", 45, 0, 1, "03/08 - 09/08/26", "TRẦN THỊ XUÂN (15.234.TG)", "1,2,3; 6,7,8 (A.202; A.202)", "9,10 (A.202)", "4,5 (A.202)", "", "", ""],
+    [7, "Kế toán doanh nghiệp thương mại dịch vụ", "ĐH13KE2", 3, "LT", 45, 0, 3, "10/08 - 30/08/26", "TRẦN THỊ XUÂN (15.234.TG)", "6,7,8 (A.202)", "9,10 (A.202)", "", "", "", ""],
+    [8, "Kế toán doanh nghiệp thương mại dịch vụ", "ĐH13KE2", 3, "LT", 45, 0, 4, "07/09 - 04/10/26", "TRẦN THỊ XUÂN (15.234.TG)", "6,7,8 (A.202)", "9,10 (A.202)", "", "", "", ""],
+    [9, "Kế toán ngân hàng", "ĐH13KE2", 3, "LT", 45, 0, 9, "03/08 - 04/10/26", "NGUYỄN THỊ VÂN (15.240.TG)", "", "", "", "9,10 (A.202)", "6,7,8 (A.202)", ""],
+    [10, "Kế toán quốc tế", "ĐH13KE2", 3, "LT", 45, 0, 1, "03/08 - 09/08/26", "LÊ THỊ HẠNH (15.179.GV)", "9,10 (A.202)", "", "1,2,3 (A.202)", "", "", ""],
+    [11, "Kế toán quốc tế", "ĐH13KE2", 3, "LT", 45, 0, 1, "03/08 - 09/08/26", "NGUYỄN CÔNG THỊ ĐOAN TRANG (15.216.TG)", "", "4,5 (A.202)", "6,7,8 (A.202)", "", "", ""],
+    [12, "Kế toán quốc tế", "ĐH13KE2", 3, "LT", 45, 0, 3, "10/08 - 30/08/26", "LÊ THỊ HẠNH (15.179.GV)", "9,10 (A.202)", "", "6,7,8 (A.202)", "", "", ""],
+    [13, "Kế toán quốc tế", "ĐH13KE2", 3, "LT", 45, 0, 4, "07/09 - 04/10/26", "LÊ THỊ HẠNH (15.179.GV)", "9,10 (A.202)", "", "6,7,8 (A.202)", "", "", ""],
+    [14, "Quản trị dự án đầu tư", "ĐH13KE2", 3, "ELEARNING", 45, 0, 7, "10/08 - 27/09/26", "NGUYỄN THỊ THU HƯỜNG (15.024.GV), PHAN TIẾN DŨNG (15.249.TG)", "", "LMS", "LMS", "LMS", "LMS", "LMS"]
+]
+
+# Save UTF-8 BOM CSV (utf-8-sig)
+with open("tkb_doi_chieu.csv", "w", encoding="utf-8-sig", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerows(data)
+
+# Save UTF-16LE TSV for Windows Excel native opening
+with open("tkb_doi_chieu.tsv", "w", encoding="utf-16", newline="") as f:
+    writer = csv.writer(f, delimiter="\t")
+    writer.writerows(data)
+
+# Save HTML Table format which Excel opens perfectly with styling
+html_rows = ""
+for i, row in enumerate(data):
+    tag = "th" if i == 0 else "td"
+    cells = "".join([f"<{tag} style='border:1px solid #ccc;padding:6px;background-color:{'#4f46e5;color:white' if i==0 else ('#f8fafc' if i%2==0 else '#ffffff')}'>{cell}</{tag}>" for cell in row])
+    html_rows += f"<tr>{cells}</tr>\n"
+
+html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bảng Đối Chiếu Thời Khóa Biểu</title>
+<style>
+  body {{ font-family: Arial, sans-serif; padding: 20px; }}
+  table {{ border-collapse: collapse; width: 100%; }}
+</style>
+</head>
+<body>
+<h2>BẢNG ĐỐI CHIẾU THỜI KHÓA BIỂU ĐH13KE2</h2>
+<table>
+{html_rows}
+</table>
+</body>
+</html>"""
+
+with open("tkb_doi_chieu.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("Generated UTF-8-SIG CSV, TSV, and HTML table with E-Learning module successfully!")

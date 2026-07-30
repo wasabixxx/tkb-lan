@@ -1,8 +1,8 @@
-// Initial Default TKB Data from tkb.json
+// Initial Default TKB Data fallback (Matching tkb.json & schedule images 100%)
 const DEFAULT_TKB_DATA = {
-  "lop": "DH13KE2",
+  "lop": "ĐH13KE2",
   "nam_hoc": "2026",
-  "ghi_chu": "Ảnh không chứa hàng tiêu đề của các cột thứ trong tuần. Các cặp cột lịch học được suy luận lần lượt là Thứ 2 đến Thứ 7.",
+  "ghi_chu": "Bao gồm các môn học tập trung tại phòng A.202 và môn học trực tuyến ELEARNING trên LMS.",
   "hoc_phan": [
     {
       "ten_hoc_phan": "Hệ thống thông tin kế toán",
@@ -13,6 +13,20 @@ const DEFAULT_TKB_DATA = {
       "nhom": 1,
       "thoi_gian": { "tu_ngay": "2026-08-03", "den_ngay": "2026-08-09" },
       "giang_vien": [{ "ho_ten": "LÊ THỊ HẠNH", "ma": "15.179", "chuc_danh": "GV" }],
+      "lich_hoc": [
+        { "thu": 2, "tiet": [4, 5], "phong": "A.202" },
+        { "thu": 3, "tiet": [6, 7, 8], "phong": "A.202" }
+      ]
+    },
+    {
+      "ten_hoc_phan": "Hệ thống thông tin kế toán",
+      "so_tin_chi": 3,
+      "hinh_thuc": "LT",
+      "so_tiet_ly_thuyet": 45,
+      "so_tiet_thuc_hanh": 0,
+      "nhom": 1,
+      "thoi_gian": { "tu_ngay": "2026-08-03", "den_ngay": "2026-08-09" },
+      "giang_vien": [{ "ho_ten": "NGUYỄN CÔNG THỊ ĐOAN TRANG", "ma": "15.216", "chuc_danh": "TG" }],
       "lich_hoc": [
         { "thu": 3, "tiet": [1, 2, 3], "phong": "A.202" },
         { "thu": 4, "tiet": [9, 10], "phong": "A.202" }
@@ -176,6 +190,27 @@ const DEFAULT_TKB_DATA = {
         { "thu": 2, "tiet": [9, 10], "phong": "A.202" },
         { "thu": 4, "tiet": [6, 7, 8], "phong": "A.202" }
       ]
+    },
+    {
+      "ten_hoc_phan": "Quản trị dự án đầu tư",
+      "so_tin_chi": 3,
+      "hinh_thuc": "ELEARNING",
+      "so_tiet_ly_thuyet": 45,
+      "so_tiet_thuc_hanh": 0,
+      "nhom": 7,
+      "thoi_gian": { "tu_ngay": "2026-08-10", "den_ngay": "2026-09-27" },
+      "giang_vien": [
+        { "ho_ten": "NGUYỄN THỊ THU HƯỜNG", "ma": "15.024", "chuc_danh": "GV" },
+        { "ho_ten": "PHAN TIẾN DŨNG", "ma": "15.249", "chuc_danh": "TG" }
+      ],
+      "lich_hoc": [
+        { "thu": 2, "tiet": [], "phong": "LMS" },
+        { "thu": 3, "tiet": [], "phong": "LMS" },
+        { "thu": 4, "tiet": [], "phong": "LMS" },
+        { "thu": 5, "tiet": [], "phong": "LMS" },
+        { "thu": 6, "tiet": [], "phong": "LMS" },
+        { "thu": 7, "tiet": [], "phong": "LMS" }
+      ]
     }
   ]
 };
@@ -215,12 +250,30 @@ let selectedMobileDay = "all"; // "all" | "2" | "3" | "4" | "5" | "6" | "7"
 let isZoomFitMode = false; // Toggle zoom fit whole week on mobile
 
 // Color CSS class names mapping
-const SUBJECT_CLASSES = ["sub-1", "sub-2", "sub-3", "sub-4", "sub-5"];
+const SUBJECT_CLASSES = ["sub-1", "sub-2", "sub-3", "sub-4", "sub-5", "sub-6"];
 
-// Initialize Application
+// Initialize Application with Dynamic JSON Fetching
 document.addEventListener("DOMContentLoaded", () => {
   initTheme();
-  initData(DEFAULT_TKB_DATA);
+
+  // Dynamically load live tkb.json from server first
+  fetch('tkb.json?t=' + Date.now())
+    .then(res => {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (data && Array.isArray(data.hoc_phan) && data.hoc_phan.length > 0) {
+        initData(data);
+      } else {
+        initData(DEFAULT_TKB_DATA);
+      }
+    })
+    .catch(err => {
+      console.warn("Nạp file tkb.json trực tiếp không khả thi, sử dụng dữ liệu fallback:", err);
+      initData(DEFAULT_TKB_DATA);
+    });
+
   setupEventListeners();
 });
 
@@ -305,7 +358,7 @@ function initData(data) {
   }
 
   // Populate Header Info & Metrics
-  document.getElementById("classNameText").textContent = data.lop || "DH13KE2";
+  document.getElementById("classNameText").textContent = data.lop || "ĐH13KE2";
   document.getElementById("yearText").textContent = data.nam_hoc ? `Năm học ${data.nam_hoc}` : "2026";
   
   const totalCredits = uniqueSubjects.reduce((sum, name) => {
@@ -362,7 +415,7 @@ function renderView() {
   }
 }
 
-// 1. Weekly Grid View (Supports Zoom Fit & Mobile Single Day View)
+// 1. Weekly Grid View (Supports Zoom Fit, Mobile Single Day View & Elearning Bar)
 function renderWeeklyGrid(container) {
   const activeWeek = weeksList[selectedWeekIndex];
   if (!activeWeek) return;
@@ -384,20 +437,22 @@ function renderWeeklyGrid(container) {
     return matchName || matchTeacher || matchRoom;
   });
 
+  // Separate fixed period modules vs E-Learning LMS modules
+  const inPersonModules = filteredModules.filter(hp => hp.hinh_thuc !== "ELEARNING");
+  const elearningModules = filteredModules.filter(hp => hp.hinh_thuc === "ELEARNING");
+
   // Determine active days list (all 6 days or single day filtered on mobile)
-  // Ensure selectedMobileDay fallback to "all" if undefined
   const currentDayKey = selectedMobileDay || "all";
   const displayDays = currentDayKey === "all" 
     ? DAYS_OF_WEEK 
     : DAYS_OF_WEEK.filter(d => d.key.toString() === currentDayKey);
 
-  // If displayDays unexpectedly empty, default to all days
   const finalDisplayDays = displayDays.length > 0 ? displayDays : DAYS_OF_WEEK;
   const isSingleDay = finalDisplayDays.length === 1;
 
   // Create Matrix for Days x 10 Periods
   const matrix = {};
-  filteredModules.forEach(hp => {
+  inPersonModules.forEach(hp => {
     hp.lich_hoc.forEach(lh => {
       lh.tiet.forEach(tietNum => {
         const key = `${lh.thu}_${tietNum}`;
@@ -494,6 +549,41 @@ function renderWeeklyGrid(container) {
   }
 
   html += `</div>`;
+
+  // Render E-Learning LMS Online courses section if active this week
+  if (elearningModules.length > 0) {
+    html += `
+      <div class="elearning-section">
+        <div class="elearning-header">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+          💻 HỌC TRỰC TUYẾN TRÊN LMS (E-LEARNING TỰ HỌC TRONG TUẦN)
+        </div>
+        <div class="elearning-grid">
+    `;
+
+    elearningModules.forEach(hp => {
+      const teacherNames = hp.giang_vien.map(g => g.ho_ten).join(", ");
+      html += `
+        <div class="elearning-card" onclick="openModal('${escapeHtml(JSON.stringify(hp))}')">
+          <div class="elearning-badge">HỌC ONLINE • ELEARNING</div>
+          <div class="course-title" style="font-size:0.95rem; font-weight:800">${hp.ten_hoc_phan}</div>
+          <div class="course-detail-row">
+            <span>Nhóm: <strong>${hp.nhom}</strong> | ${hp.so_tin_chi} Tín chỉ</span>
+          </div>
+          <div class="course-detail-row">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <span>GV: ${teacherNames}</span>
+          </div>
+          <div class="course-detail-row" style="color:var(--accent-primary)">
+            <span>🌐 Hệ thống học trực tuyến LMS</span>
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div></div>`;
+  }
+
   container.innerHTML = html;
 }
 
@@ -544,17 +634,19 @@ function renderMasterView(container) {
     const colorInfo = subjectColorMap[hp.ten_hoc_phan] || { index: 1 };
     const teacherNames = hp.giang_vien.map(g => `${g.chuc_danh || ''} ${g.ho_ten} (${g.ma})`).join("; ");
 
-    const schedulesText = hp.lich_hoc.map(lh => {
-      const dayObj = DAYS_OF_WEEK.find(d => d.key === lh.thu);
-      return `${dayObj ? dayObj.label : `Thứ ${lh.thu}`}: Tiết ${lh.tiet.join(",")} (Phòng ${lh.phong})`;
-    }).join(" | ");
+    const schedulesText = hp.hinh_thuc === "ELEARNING" 
+      ? "💻 Học Trực Tuyến trên LMS (ELEARNING)"
+      : hp.lich_hoc.map(lh => {
+          const dayObj = DAYS_OF_WEEK.find(d => d.key === lh.thu);
+          return `${dayObj ? dayObj.label : `Thứ ${lh.thu}`}: Tiết ${lh.tiet.join(",")} (Phòng ${lh.phong})`;
+        }).join(" | ");
 
     html += `
       <div class="catalog-card" onclick="openModal('${escapeHtml(JSON.stringify(hp))}')">
         <div class="catalog-main">
           <div class="catalog-accent-bar sub-${colorInfo.index}"></div>
           <div class="catalog-title">
-            <h3>${hp.ten_hoc_phan} - <span style="color:var(--accent-primary)">Nhóm ${hp.nhom}</span></h3>
+            <h3>${hp.ten_hoc_phan} - <span style="color:var(--accent-primary)">Nhóm ${hp.nhom}</span> ${hp.hinh_thuc === 'ELEARNING' ? '📱 [LMS ONLINE]' : ''}</h3>
             <p>📅 Thời gian: ${hp.thoi_gian.tu_ngay} ➔ ${hp.thoi_gian.den_ngay}</p>
           </div>
         </div>
@@ -655,15 +747,17 @@ function toggleZoomFit(e) {
 }
 
 function hardReloadApp() {
-  showToast("Đang làm mới ứng dụng...");
-  if ('caches' in window) {
-    caches.keys().then((names) => {
-      names.forEach(name => caches.delete(name));
+  showToast("Đang tải lại dữ liệu mới nhất...");
+  fetch('tkb.json?t=' + Date.now())
+    .then(res => res.json())
+    .then(data => {
+      initData(data);
+      showToast("Đã cập nhật dữ liệu tkb.json mới nhất!");
+    })
+    .catch(() => {
+      const baseUrl = window.location.href.split('?')[0];
+      window.location.href = baseUrl + '?t=' + Date.now();
     });
-  }
-  // Force reload with unique query timestamp
-  const baseUrl = window.location.href.split('?')[0];
-  window.location.href = baseUrl + '?t=' + Date.now();
 }
 
 function filterBySubject(subName) {
@@ -710,17 +804,19 @@ function openModal(hpJsonStr, dayKey = null, room = null) {
     </div>
   `).join("");
 
-  const schedulesList = hp.lich_hoc.map(lh => {
-    const dayObj = DAYS_OF_WEEK.find(d => d.key === lh.thu);
-    const tietText = lh.tiet.join(", ");
-    const startTime = PERIOD_TIMES[lh.tiet[0]]?.start || "";
-    const endTime = PERIOD_TIMES[lh.tiet[lh.tiet.length - 1]]?.end || "";
+  const schedulesList = hp.hinh_thuc === "ELEARNING"
+    ? "💻 <strong>Học Trực Tuyến trên hệ thống LMS</strong> (Sinh viên chủ động đăng nhập và hoàn thành bài học trực tuyến)"
+    : hp.lich_hoc.map(lh => {
+        const dayObj = DAYS_OF_WEEK.find(d => d.key === lh.thu);
+        const tietText = lh.tiet.join(", ");
+        const startTime = PERIOD_TIMES[lh.tiet[0]]?.start || "";
+        const endTime = PERIOD_TIMES[lh.tiet[lh.tiet.length - 1]]?.end || "";
 
-    return `• ${dayObj ? dayObj.label : `Thứ ${lh.thu}`}: Tiết ${tietText} (${startTime} - ${endTime}) - Phòng <strong>${lh.phong}</strong>`;
-  }).join("<br>");
+        return `• ${dayObj ? dayObj.label : `Thứ ${lh.thu}`}: Tiết ${tietText} (${startTime} - ${endTime}) - Phòng <strong>${lh.phong}</strong>`;
+      }).join("<br>");
 
   modalBody.innerHTML = `
-    <span class="modal-header-badge sub-${colorInfo.index}">Nhóm ${hp.nhom} - ${hp.hinh_thuc === 'LT' ? 'Lý thuyết' : 'Thực hành'}</span>
+    <span class="modal-header-badge sub-${colorInfo.index}">Nhóm ${hp.nhom} - ${hp.hinh_thuc === 'ELEARNING' ? 'E-Learning (LMS)' : (hp.hinh_thuc === 'LT' ? 'Lý thuyết' : 'Thực hành')}</span>
     <h2 class="modal-title">${hp.ten_hoc_phan}</h2>
     
     <div class="modal-grid">
@@ -729,21 +825,21 @@ function openModal(hpJsonStr, dayKey = null, room = null) {
         <div class="modal-info-val">${hp.so_tin_chi} Tín chỉ</div>
       </div>
       <div class="modal-info-block">
-        <div class="modal-info-lbl">Số tiết (Lý thuyết)</div>
-        <div class="modal-info-val">${hp.so_tiet_ly_thuyet} tiết</div>
+        <div class="modal-info-lbl">Hình thức học</div>
+        <div class="modal-info-val">${hp.hinh_thuc === 'ELEARNING' ? '🌐 E-Learning Online' : '🏫 Trực tiếp tại trường'}</div>
       </div>
       <div class="modal-info-block" style="grid-column: span 2;">
         <div class="modal-info-lbl">Thời gian giảng dạy</div>
         <div class="modal-info-val">${formatDateFull(hp.thoi_gian.tu_ngay)} ➔ ${formatDateFull(hp.thoi_gian.den_ngay)}</div>
       </div>
       <div class="modal-info-block" style="grid-column: span 2;">
-        <div class="modal-info-lbl">Lịch học chi tiết hàng tuần</div>
+        <div class="modal-info-lbl">Lịch học chi tiết</div>
         <div class="modal-info-val" style="font-size: 0.88rem; line-height: 1.6; margin-top: 0.4rem;">${schedulesList}</div>
       </div>
     </div>
 
     <div class="modal-teacher-list">
-      <div class="modal-info-lbl" style="margin-bottom:0.5rem">Giảng viên đảm nhận</div>
+      <div class="modal-info-lbl" style="margin-bottom:0.5rem">Giảng viên phụ trách môn học</div>
       ${teacherItems}
     </div>
   `;
@@ -829,7 +925,7 @@ function setupEventListeners() {
 
   // Mobile Day Filter Pills - exclude buttons without data-day
   document.querySelectorAll(".mobile-day-pill[data-day]").forEach(pill => {
-    pill.addEventListener("click", (e) => {
+    pill.addEventListener("click", () => {
       if (pill.dataset.day) {
         handleMobileDayFilter(pill.dataset.day);
       }

@@ -1,7 +1,7 @@
 {
-  "lop": "DH13KE2",
+  "lop": "ĐH13KE2",
   "nam_hoc": "2026",
-  "ghi_chu": "Ảnh không chứa hàng tiêu đề của các cột thứ trong tuần. Các cặp cột lịch học được suy luận lần lượt là Thứ 2 đến Thứ 7.",
+  "ghi_chu": "Bao gồm các môn học tập trung tại phòng A.202 và môn học trực tuyến ELEARNING trên LMS.",
   "hoc_phan": [
     {
       "ten_hoc_phan": "Hệ thống thông tin kế toán",
@@ -19,6 +19,37 @@
           "ho_ten": "LÊ THỊ HẠNH",
           "ma": "15.179",
           "chuc_danh": "GV"
+        }
+      ],
+      "lich_hoc": [
+        {
+          "thu": 2,
+          "tiet": [4, 5],
+          "phong": "A.202"
+        },
+        {
+          "thu": 3,
+          "tiet": [6, 7, 8],
+          "phong": "A.202"
+        }
+      ]
+    },
+    {
+      "ten_hoc_phan": "Hệ thống thông tin kế toán",
+      "so_tin_chi": 3,
+      "hinh_thuc": "LT",
+      "so_tiet_ly_thuyet": 45,
+      "so_tiet_thuc_hanh": 0,
+      "nhom": 1,
+      "thoi_gian": {
+        "tu_ngay": "2026-08-03",
+        "den_ngay": "2026-08-09"
+      },
+      "giang_vien": [
+        {
+          "ho_ten": "NGUYỄN CÔNG THỊ ĐOAN TRANG",
+          "ma": "15.216",
+          "chuc_danh": "TG"
         }
       ],
       "lich_hoc": [
@@ -387,6 +418,62 @@
           "thu": 4,
           "tiet": [6, 7, 8],
           "phong": "A.202"
+        }
+      ]
+    },
+    {
+      "ten_hoc_phan": "Quản trị dự án đầu tư",
+      "so_tin_chi": 3,
+      "hinh_thuc": "ELEARNING",
+      "so_tiet_ly_thuyet": 45,
+      "so_tiet_thuc_hanh": 0,
+      "nhom": 7,
+      "thoi_gian": {
+        "tu_ngay": "2026-08-10",
+        "den_ngay": "2026-09-27"
+      },
+      "giang_vien": [
+        {
+          "ho_ten": "NGUYỄN THỊ THU HƯỜNG",
+          "ma": "15.024",
+          "chuc_danh": "GV"
+        },
+        {
+          "ho_ten": "PHAN TIẾN DŨNG",
+          "ma": "15.249",
+          "chuc_danh": "TG"
+        }
+      ],
+      "lich_hoc": [
+        {
+          "thu": 2,
+          "tiet": [],
+          "phong": "LMS"
+        },
+        {
+          "thu": 3,
+          "tiet": [],
+          "phong": "LMS"
+        },
+        {
+          "thu": 4,
+          "tiet": [],
+          "phong": "LMS"
+        },
+        {
+          "thu": 5,
+          "tiet": [],
+          "phong": "LMS"
+        },
+        {
+          "thu": 6,
+          "tiet": [],
+          "phong": "LMS"
+        },
+        {
+          "thu": 7,
+          "tiet": [],
+          "phong": "LMS"
         }
       ]
     }

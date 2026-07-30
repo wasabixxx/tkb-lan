@@ -56,6 +56,11 @@
   --subject-5-gradient: linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(219, 39, 119, 0.35));
   --subject-5-border: rgba(236, 72, 153, 0.4);
 
+  --subject-6: #f97316;
+  --subject-6-bg: rgba(249, 115, 22, 0.15);
+  --subject-6-gradient: linear-gradient(135deg, rgba(249, 115, 22, 0.25), rgba(234, 88, 12, 0.35));
+  --subject-6-border: rgba(249, 115, 22, 0.4);
+
   --grid-cell-min-height: 75px;
 }
 
@@ -91,6 +96,9 @@
 
   --subject-5-gradient: linear-gradient(135deg, rgba(252, 231, 243, 0.95), rgba(251, 207, 232, 0.95));
   --subject-5-border: #ec4899;
+
+  --subject-6-gradient: linear-gradient(135deg, rgba(255, 237, 213, 0.95), rgba(254, 215, 170, 0.95));
+  --subject-6-border: #f97316;
 }
 
 /* Global Reset & Base Styles */
@@ -755,6 +763,61 @@ body {
 .course-card.sub-3 { background: var(--subject-3-gradient); border-color: var(--subject-3-border); }
 .course-card.sub-4 { background: var(--subject-4-gradient); border-color: var(--subject-4-border); }
 .course-card.sub-5 { background: var(--subject-5-gradient); border-color: var(--subject-5-border); }
+.course-card.sub-6 { background: var(--subject-6-gradient); border-color: var(--subject-6-border); }
+
+/* E-Learning Section Below Grid */
+.elearning-section {
+  margin-top: 1rem;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+}
+
+.elearning-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #f97316;
+  margin-bottom: 0.75rem;
+}
+
+.elearning-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.85rem;
+}
+
+.elearning-card {
+  background: var(--subject-6-gradient);
+  border: 1px solid var(--subject-6-border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.elearning-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.elearning-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: #f97316;
+  color: #fff;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  width: fit-content;
+}
 
 .course-card-header {
   display: flex;
