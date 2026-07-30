@@ -2,9 +2,9 @@
 <html lang="vi" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>Thời Khóa Biểu Trực Quan - Lớp DH13KE2</title>
-  <meta name="description" content="Ứng dụng tra cứu Thời khóa biểu học tập trực quan, tối ưu điện thoại di động cho lớp DH13KE2 năm học 2026. Lọc theo tuần, thứ trong tuần, giảng viên, môn học và tiết học.">
+  <meta name="description" content="Ứng dụng tra cứu Thời khóa biểu học tập trực quan, hỗ trợ Zoom Fit cả tuần cho điện thoại di động lớp DH13KE2 năm học 2026. Lọc theo tuần, thứ trong tuần, giảng viên, môn học và tiết học.">
   
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +17,7 @@
   <style>
     @media print {
       body { background: #ffffff !important; color: #000000 !important; }
-      .bg-glow-container, .toolbar-card, .mobile-day-bar, .legend-card, .btn-icon, .search-box, .view-tabs, #themeToggleBtn, #exportBtn, #uploadBtnLabel { display: none !important; }
+      .bg-glow-container, .toolbar-card, .mobile-day-bar, .legend-card, .btn-icon, .search-box, .view-tabs, #themeToggleBtn, #exportBtn, #uploadBtnLabel, #zoomToolbarBtn { display: none !important; }
       .timetable-container { box-shadow: none !important; border: 1px solid #ccc !important; }
       .course-card { page-break-inside: avoid; border: 1px solid #999 !important; background: #f0f0f0 !important; color: #000 !important; }
     }
@@ -133,6 +133,11 @@
           </button>
         </div>
 
+        <!-- Zoom Fit Week Button -->
+        <button class="btn-icon" id="zoomToolbarBtn" title="Thu nhỏ xem trọn tuần (Fit Screen)">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path></svg>
+        </button>
+
         <!-- Export Image / Print Button -->
         <button class="btn-icon" id="exportBtn" title="In hoặc Xuất Thời Khóa Biểu">
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
@@ -152,8 +157,9 @@
 
     </section>
 
-    <!-- Mobile Day Filter Bar -->
-    <nav class="mobile-day-bar" aria-label="Lọc theo ngày trên điện thoại">
+    <!-- Mobile Day Filter & Zoom Bar -->
+    <nav class="mobile-day-bar" aria-label="Lọc theo ngày và Zoom trên điện thoại">
+      <button class="mobile-day-pill zoom-pill" id="zoomToggleBtn" title="Bật/Tắt thu nhỏ toàn tuần">🔍 Fit Tuần</button>
       <button class="mobile-day-pill active" data-day="all">Tất cả</button>
       <button class="mobile-day-pill" data-day="2">Thứ 2</button>
       <button class="mobile-day-pill" data-day="3">Thứ 3</button>

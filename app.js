@@ -212,6 +212,7 @@ let currentViewMode = "weekly"; // "weekly" | "catalog" | "master"
 let searchQuery = "";
 let subjectColorMap = {};
 let selectedMobileDay = "all"; // "all" | "2" | "3" | "4" | "5" | "6" | "7"
+let isZoomFitMode = false; // Toggle zoom fit whole week on mobile
 
 // Color CSS class names mapping
 const SUBJECT_CLASSES = ["sub-1", "sub-2", "sub-3", "sub-4", "sub-5"];
@@ -361,7 +362,7 @@ function renderView() {
   }
 }
 
-// 1. Weekly Grid View (Supports full grid & single-day mobile view)
+// 1. Weekly Grid View (Supports Zoom Fit & Mobile Single Day View)
 function renderWeeklyGrid(container) {
   const activeWeek = weeksList[selectedWeekIndex];
   if (!activeWeek) return;
@@ -406,7 +407,13 @@ function renderWeeklyGrid(container) {
   });
 
   // Build HTML Table Grid Structure
-  let html = `<div class="timetable-grid ${isSingleDay ? 'single-day-grid' : ''}">`;
+  const gridClasses = [
+    'timetable-grid',
+    isSingleDay ? 'single-day-grid' : '',
+    isZoomFitMode ? 'zoom-fit-week' : ''
+  ].filter(Boolean).join(' ');
+
+  let html = `<div class="${gridClasses}">`;
 
   // Grid Header: Empty top-left cell + Days of week with dates
   html += `<div class="grid-header-cell time-column-header">Tiết / Thứ</div>`;
@@ -610,6 +617,34 @@ function switchViewMode(mode) {
   renderView();
 }
 
+function toggleZoomFit() {
+  isZoomFitMode = !isZoomFitMode;
+  
+  const zoomMobileBtn = document.getElementById("zoomToggleBtn");
+  const zoomToolbarBtn = document.getElementById("zoomToolbarBtn");
+
+  if (zoomMobileBtn) {
+    zoomMobileBtn.classList.toggle("is-active", isZoomFitMode);
+    zoomMobileBtn.textContent = isZoomFitMode ? "🔍 Chuẩn" : "🔍 Fit Tuần";
+  }
+
+  if (zoomToolbarBtn) {
+    zoomToolbarBtn.style.color = isZoomFitMode ? "#a855f7" : "";
+    zoomToolbarBtn.style.borderColor = isZoomFitMode ? "#a855f7" : "";
+  }
+
+  // Ensure day filter is reset to all if fitting full week
+  if (isZoomFitMode && selectedMobileDay !== "all") {
+    selectedMobileDay = "all";
+    document.querySelectorAll(".mobile-day-pill[data-day]").forEach(p => {
+      p.classList.toggle("active", p.dataset.day === "all");
+    });
+  }
+
+  renderView();
+  showToast(isZoomFitMode ? "🔍 Đã bật Thu Nhỏ (Hiển thị trọn cả tuần trên màn hình)" : "🔍 Trở lại kích thước chuẩn");
+}
+
 function filterBySubject(subName) {
   searchQuery = subName;
   document.getElementById("searchInput").value = subName;
@@ -620,7 +655,7 @@ function filterBySubject(subName) {
 
 function handleMobileDayFilter(dayKey) {
   selectedMobileDay = dayKey;
-  document.querySelectorAll(".mobile-day-pill").forEach(pill => {
+  document.querySelectorAll(".mobile-day-pill[data-day]").forEach(pill => {
     pill.classList.toggle("active", pill.dataset.day === dayKey);
   });
   if (currentViewMode !== "weekly") {
@@ -751,12 +786,18 @@ function setupEventListeners() {
   document.getElementById("searchInput").addEventListener("input", (e) => handleSearch(e.target.value));
   document.getElementById("jsonFileInput").addEventListener("change", handleFileUpload);
   document.getElementById("exportBtn").addEventListener("click", exportPNG);
+  
+  const zoomToggleBtn = document.getElementById("zoomToggleBtn");
+  if (zoomToggleBtn) zoomToggleBtn.addEventListener("click", toggleZoomFit);
+
+  const zoomToolbarBtn = document.getElementById("zoomToolbarBtn");
+  if (zoomToolbarBtn) zoomToolbarBtn.addEventListener("click", toggleZoomFit);
 
   document.querySelectorAll(".view-tab").forEach(tab => {
     tab.addEventListener("click", () => switchViewMode(tab.dataset.mode));
   });
 
-  document.querySelectorAll(".mobile-day-pill").forEach(pill => {
+  document.querySelectorAll(".mobile-day-pill[data-day]").forEach(pill => {
     pill.addEventListener("click", () => handleMobileDayFilter(pill.dataset.day));
   });
 
